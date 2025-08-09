@@ -1,0 +1,221 @@
+openapi: 3.0.3
+info:
+  title: Load Balancer Management API
+  description: API for managing load balancer configuration and backend servers
+  version: 1.0.0
+  contact:
+    name: Load Balancer API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8081/api/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /servers:
+    get:
+      summary: List all backend servers
+      tags:
+        - Servers
+      responses:
+        '200':
+          description: List of backend servers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Add a new backend server
+      tags:
+        - Servers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddServerRequest'
+      responses:
+        '201':
+          description: Server created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /servers/{id}:
+    put:
+      summary: Update a backend server
+      tags:
+        - Servers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServerRequest'
+      responses:
+        '200':
+          description: Server updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete a backend server
+      tags:
+        - Servers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Server deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /config:
+    get:
+      summary: Get current configuration
+      tags:
+        - Configuration
+      responses:
+        '200':
+          description: Current configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /status:
+    get:
+      summary: Get system status
+      tags:
+        - Monitoring
+      security: []
+      responses:
+        '200':
+          description: System status information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  uptime:
+                    type: string
+                    example: "2h30m15s"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Server:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        weight:
+          type: integer
+        healthStatus:
+          type: string
+          enum: [HEALTHY, DEGRADED, UNHEALTHY, MAINTENANCE]
+        activeConnections:
+          type: integer
+          format: int64
+
+    AddServerRequest:
+      type: object
+      required:
+        - id
+        - url
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        weight:
+          type: integer
+          default: 1
+
+    UpdateServerRequest:
+      type: object
+      properties:
+        weight:
+          type: integer
+        healthStatus:
+          type: string
+          enum: [HEALTHY, DEGRADED, UNHEALTHY, MAINTENANCE]
+
+    Config:
+      type: object
+      properties:
+        loadBalancerPort:
+          type: integer
+        apiPort:
+          type: integer
+        loadBalancingAlgorithm:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

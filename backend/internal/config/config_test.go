@@ -8,6 +8,7 @@ import (
 const testYAML = `
 loadBalancerPort: 8080
 apiPort: 8081
+apiKey: testkey
 backendServers:
   - id: "server1"
     url: "http://localhost:9001"
@@ -45,5 +46,8 @@ func TestLoadConfig(t *testing.T) {
 	}
 	if cfg.HealthCheck.IntervalSeconds != 5 {
 		t.Errorf("expected health check interval 5, got %d", cfg.HealthCheck.IntervalSeconds)
+	}
+	if cfg.APIKey != "testkey" {
+		t.Errorf("expected APIKey 'testkey', got %q", cfg.APIKey)
 	}
 }

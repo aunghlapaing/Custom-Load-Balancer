@@ -21,10 +21,14 @@ type HealthCheckConfig struct {
 }
 
 type Config struct {
-	LoadBalancerPort int                   `yaml:"loadBalancerPort"`
-	ApiPort          int                   `yaml:"apiPort"`
-	BackendServers   []BackendServerConfig `yaml:"backendServers"`
-	HealthCheck      HealthCheckConfig     `yaml:"healthCheck"`
+	LoadBalancerPort       int                   `yaml:"loadBalancerPort"`
+	ApiPort                int                   `yaml:"apiPort"`
+	APIKey                 string                `yaml:"apiKey"`
+	LoadBalancingAlgorithm string                `yaml:"loadBalancingAlgorithm"`
+	SSLCertPath            string                `yaml:"sslCertPath"`
+	SSLKeyPath             string                `yaml:"sslKeyPath"`
+	BackendServers         []BackendServerConfig `yaml:"backendServers"`
+	HealthCheck            HealthCheckConfig     `yaml:"healthCheck"`
 	// Add other config fields as you implement features (e.g., algorithms, SSL, rate limits)
 }
 
@@ -38,5 +42,14 @@ func LoadConfig(path string) (*Config, error) {
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
+
+	// Override with environment variables if set
+	if apiKey := os.Getenv("LB_API_KEY"); apiKey != "" {
+		cfg.APIKey = apiKey
+	}
+	if cfg.APIKey == "" {
+		cfg.APIKey = "dev_api_key_123" // Default fallback
+	}
+
 	return &cfg, nil
 }
